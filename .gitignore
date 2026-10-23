@@ -1,0 +1,9 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+.env
+.idea
+*.iml
+logs/
+desktop.ini
+src/main/resources/config/private.properties
