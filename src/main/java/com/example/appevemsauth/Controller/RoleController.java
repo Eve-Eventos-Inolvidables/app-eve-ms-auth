@@ -32,6 +32,7 @@ public class RoleController extends BaseController<Role, RoleDto, RoleFilter, Ro
 
     @GetMapping("/all")
     Response<List<RoleDto>> getAll(){
+        log.info("GET ALL /api/roles/all");
         return ResponseFactory.ok(service.getAll());
     }
 
