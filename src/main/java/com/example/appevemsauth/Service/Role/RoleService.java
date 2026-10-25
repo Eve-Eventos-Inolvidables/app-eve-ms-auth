@@ -35,6 +35,7 @@ public class RoleService extends UpdatableService<
     public RoleDto createRole(CreateRoleDto dto){
         return mapper.toDto(repository.save(mapper.toEntity(dto)));
     }
+
     @Override
     @Cacheable(value = RedisCacheConfig.ROLE_SECTION, key = "'api_roles_all'")
     public List<RoleDto> getAll(){
