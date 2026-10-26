@@ -12,12 +12,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.openapitools.model.CreateUserDto;
 import org.openapitools.model.UpdateUserDto;
 import org.openapitools.model.UserDto;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
 @RequestMapping("/api/users")
 @Tag( name = "Users", description = "Controller for users ")
+@PreAuthorize("hasRole('Administrador')")
 public class UserController extends BaseController<User, UserDto, UserFilter, UserService> {
     protected UserController(UserService userService){super(userService);}
 

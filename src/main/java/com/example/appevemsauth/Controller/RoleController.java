@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.openapitools.model.CreateRoleDto;
 import org.openapitools.model.RoleDto;
 import org.openapitools.model.UpdateRoleDto;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/roles")
 @Tag( name = "Roles", description = "Controller with a sample of simple endpoints for a simple entity")
+@PreAuthorize("hasRole('Administrador')")
 public class RoleController extends BaseController<Role, RoleDto, RoleFilter, RoleService> {
 
     protected RoleController(RoleService service) {

@@ -18,6 +18,8 @@ import java.util.List;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String ROLE_PREFIX = "ROLE_";
+
     private final JwtService jwtService;
     private final String rolesClaim;
 
@@ -47,11 +49,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         List<SimpleGrantedAuthority> authorities = roles.stream()
                 .map(String.class::cast)
+                .map(String::trim)
+                .filter(role -> !role.isEmpty())
+                .map(this::withRolePrefix)
                 .map(SimpleGrantedAuthority::new)
                 .toList();
+        if (authorities.isEmpty()) {
+            return;
+        }
         UsernamePasswordAuthenticationToken authentication =
                 UsernamePasswordAuthenticationToken.authenticated(claims.getSubject(), null, authorities);
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private String withRolePrefix(String role) {
+        return role.startsWith(ROLE_PREFIX) ? role : ROLE_PREFIX + role;
     }
 }
