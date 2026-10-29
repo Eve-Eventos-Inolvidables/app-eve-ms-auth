@@ -43,7 +43,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(Customizer.withDefaults()) // 1. Integra CORS con el filtro de seguridad
+//                cors ya no necesitado, el gateway se encarga de esto
+//                .cors(Customizer.withDefaults()) // 1. Integra CORS con el filtro de seguridad
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
