@@ -9,4 +9,5 @@ import lombok.Setter;
 @Setter
 public class UserFilter extends PagedFilter {
     private String name;
+    private Integer roleId;
 }

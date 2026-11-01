@@ -95,6 +95,11 @@ public class UserService extends UpdatableService<User, UserDto, UpdateUserDto, 
                         )
                 );
             }
+            if (f.getRoleId() != null) {
+                predicateList.add(
+                        criteriaBuilder.equal(root.get("role").get("id"), f.getRoleId())
+                );
+            }
             return criteriaBuilder.and(predicateList.toArray(new Predicate[0]));
         };
     }
