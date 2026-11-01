@@ -47,7 +47,7 @@
         <dependency>
             <groupId>com.example</groupId>
             <artifactId>app-eve-common</artifactId>
-            <version>0.4.2</version>
+            <version>0.4.3</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
