@@ -22,6 +22,21 @@ import java.util.Map;
 public class RedisCacheConfig {
     public static final String ROLE_SECTION = "roles";
     public static final String USER_SECTION = "users";
+    private static final String USER_KEY_PREFIX = "api_users_";
+    private static final String ROLE_KEY_PREFIX = "api_role_";
+    private static final String ROLES_LIST_KEY = "api_roles_all";
+
+    public static String userKey(Long id) {
+        return USER_KEY_PREFIX + id;
+    }
+
+    public static String roleKey(Long id) {
+        return ROLE_KEY_PREFIX + id;
+    }
+
+    public static String rolesListKey() {
+        return ROLES_LIST_KEY;
+    }
 
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory,

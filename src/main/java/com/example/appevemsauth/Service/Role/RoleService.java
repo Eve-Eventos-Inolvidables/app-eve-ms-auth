@@ -3,7 +3,9 @@ package com.example.appevemsauth.Service.Role;
 import com.example.appevecommon.Models.User.Role;
 import com.example.appevecommon.Repository.IBaseRepository;
 import com.example.appevecommon.Service.UpdatableService;
+import com.example.appevecommon.Service.Utilities.Responses.Ok.PageResult;
 import com.example.appevemsauth.Config.RedisCacheConfig;
+import com.example.appevemsauth.Service.Cache.IndividualCacheService;
 import org.openapitools.model.CreateRoleDto;
 import org.openapitools.model.RoleDto;
 import org.openapitools.model.UpdateRoleDto;
@@ -18,6 +20,7 @@ import java.util.List;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.stereotype.Service;
 
+
 @Service
 public class RoleService extends UpdatableService<
         Role,
@@ -27,19 +30,48 @@ public class RoleService extends UpdatableService<
         RoleFilter> {
 
 
-    protected RoleService(IBaseRepository<Role> repository,RoleMapper mapper) {
-        super(repository,mapper);
+    private final IndividualCacheService individualCacheService;
+    private final String x = "#{ '${cache.sections.roles}' }";
+    protected RoleService(IBaseRepository<Role> repository, RoleMapper mapper,
+                          IndividualCacheService individualCacheService) {
+        super(repository, mapper);
+        this.individualCacheService = individualCacheService;
     }
 
-    @CacheEvict(value = RedisCacheConfig.ROLE_SECTION, key = "'api_roles_all'")
+    @Caching(
+            put = {
+                    @CachePut(value =  RedisCacheConfig.ROLE_SECTION,
+                            key = "T(com.example.appevemsauth.Config.RedisCacheConfig).roleKey(#result.id)")
+            },
+            evict = {
+                    @CacheEvict(value = RedisCacheConfig.ROLE_SECTION,
+                            key = "T(com.example.appevemsauth.Config.RedisCacheConfig).rolesListKey()")
+            }
+    )
     public RoleDto createRole(CreateRoleDto dto){
         return mapper.toDto(repository.save(mapper.toEntity(dto)));
     }
 
     @Override
-    @Cacheable(value = RedisCacheConfig.ROLE_SECTION, key = "'api_roles_all'")
+    @Cacheable(value = RedisCacheConfig.ROLE_SECTION,
+            key = "T(com.example.appevemsauth.Config.RedisCacheConfig).rolesListKey()")
     public List<RoleDto> getAll(){
-        return new ArrayList<>(repository.findAll().stream().map(mapper::toDto).toList());
+        List<RoleDto> roles = new ArrayList<>(repository.findAll().stream().map(mapper::toDto).toList());
+        individualCacheService.putIfAbsent(
+                RedisCacheConfig.ROLE_SECTION,
+                roles,
+                role -> RedisCacheConfig.roleKey(role.getId()));
+        return roles;
+    }
+
+    @Override
+    public PageResult<RoleDto> getByFilter(RoleFilter filter) {
+        PageResult<RoleDto> result = super.getByFilter(filter);
+        individualCacheService.putIfAbsent(
+                RedisCacheConfig.ROLE_SECTION,
+                result.items(),
+                role -> RedisCacheConfig.roleKey(role.getId()));
+        return result;
     }
 
     //CACHE
@@ -47,10 +79,12 @@ public class RoleService extends UpdatableService<
     @Override
     @Caching(
             put = {
-                    @CachePut(value = RedisCacheConfig.ROLE_SECTION, key = "'api_role_' + #id")
+                    @CachePut(value = RedisCacheConfig.ROLE_SECTION,
+                            key = "T(com.example.appevemsauth.Config.RedisCacheConfig).roleKey(#result.id)")
             },
             evict = {
-                    @CacheEvict(value = RedisCacheConfig.ROLE_SECTION, key = "'api_roles_all'"),
+                    @CacheEvict(value = RedisCacheConfig.ROLE_SECTION,
+                            key = "T(com.example.appevemsauth.Config.RedisCacheConfig).rolesListKey()"),
                     @CacheEvict(value = RedisCacheConfig.USER_SECTION, allEntries = true)
             }
     )
@@ -59,15 +93,18 @@ public class RoleService extends UpdatableService<
     }
 
     @Override
-    @Cacheable(value = RedisCacheConfig.ROLE_SECTION,key = "'api_role_' + #id")
+    @Cacheable(value = RedisCacheConfig.ROLE_SECTION,
+            key = "T(com.example.appevemsauth.Config.RedisCacheConfig).roleKey(#id)")
     public RoleDto getById(Long id){
         return super.getById(id);
     }
 
     @Override
     @Caching(evict = {
-            @CacheEvict(value = RedisCacheConfig.ROLE_SECTION, key = "'api_role_' + #id" ),
-            @CacheEvict(value = RedisCacheConfig.ROLE_SECTION,key = "'api_roles_all'"),
+            @CacheEvict(value = RedisCacheConfig.ROLE_SECTION,
+                    key = "T(com.example.appevemsauth.Config.RedisCacheConfig).roleKey(#id)"),
+            @CacheEvict(value = RedisCacheConfig.ROLE_SECTION,
+                    key = "T(com.example.appevemsauth.Config.RedisCacheConfig).rolesListKey()"),
             @CacheEvict(value = RedisCacheConfig.USER_SECTION, allEntries = true)
     })
     public boolean delete(Long id){

@@ -4,10 +4,12 @@ import com.example.appevecommon.Models.User.Role;
 import com.example.appevecommon.Models.User.User;
 import com.example.appevecommon.Service.Exception.ResourceNotFoundException;
 import com.example.appevecommon.Service.UpdatableService;
+import com.example.appevecommon.Service.Utilities.Responses.Ok.PageResult;
 import com.example.appevemsauth.Config.RedisCacheConfig;
 import com.example.appevemsauth.Dto.RegisterRequest;
 import com.example.appevemsauth.Repository.IRoleRepository;
 import com.example.appevemsauth.Repository.IUserRepository;
+import com.example.appevemsauth.Service.Cache.IndividualCacheService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.openapitools.model.*;
@@ -28,19 +30,23 @@ public class UserService extends UpdatableService<User, UserDto, UpdateUserDto, 
 
     private final IRoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final IndividualCacheService individualCacheService;
 
     public UserService(
             IUserRepository repository,
             UserMapper userMapper,
             IRoleRepository roleRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            IndividualCacheService individualCacheService) {
         super(repository, userMapper);
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.individualCacheService = individualCacheService;
     }
 
 
-    @CachePut(value = RedisCacheConfig.USER_SECTION, key = "'api_users_'+#result.id")
+    @CachePut(value = RedisCacheConfig.USER_SECTION,
+            key = "T(com.example.appevemsauth.Config.RedisCacheConfig).userKey(#result.id)")
     public UserDto createUser(CreateUserDto dto) {
         Role role = roleRepository.findById(dto.getRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException("El rol ingresado no existe"));
@@ -61,7 +67,8 @@ public class UserService extends UpdatableService<User, UserDto, UpdateUserDto, 
 
     @Override
     @Transactional
-    @CacheEvict(value = RedisCacheConfig.USER_SECTION, key = "'api_users_'+#id")
+    @CacheEvict(value = RedisCacheConfig.USER_SECTION,
+            key = "T(com.example.appevemsauth.Config.RedisCacheConfig).userKey(#id)")
     public boolean delete(Long id) {
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Usuario con id: " + id + " no existe");
@@ -70,15 +77,27 @@ public class UserService extends UpdatableService<User, UserDto, UpdateUserDto, 
     }
 
     @Override
-    @CachePut(value = RedisCacheConfig.USER_SECTION, key = "'api_users_'+#result.id")
+    @CachePut(value = RedisCacheConfig.USER_SECTION,
+            key = "T(com.example.appevemsauth.Config.RedisCacheConfig).userKey(#result.id)")
     public UserDto update(Long id, UpdateUserDto updateDto) {
         return super.update(id, updateDto);
     }
 
     @Override
-    @Cacheable(value = RedisCacheConfig.USER_SECTION, key = "'api_users_'+#id")
+    @Cacheable(value = RedisCacheConfig.USER_SECTION,
+            key = "T(com.example.appevemsauth.Config.RedisCacheConfig).userKey(#id)")
     public UserDto getById(Long id) {
         return super.getById(id);
+    }
+
+    @Override
+    public PageResult<UserDto> getByFilter(UserFilter filter) {
+        PageResult<UserDto> result = super.getByFilter(filter);
+        individualCacheService.putIfAbsent(
+                RedisCacheConfig.USER_SECTION,
+                result.items(),
+                user -> RedisCacheConfig.userKey(user.getId()));
+        return result;
     }
 
     @Override
