@@ -9,7 +9,6 @@ import com.example.appevemsauth.Config.RedisCacheConfig;
 import com.example.appevemsauth.Dto.RegisterRequest;
 import com.example.appevemsauth.Repository.IRoleRepository;
 import com.example.appevemsauth.Repository.IUserRepository;
-import com.example.appevemsauth.Service.Cache.IndividualCacheService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.openapitools.model.*;
@@ -30,18 +29,15 @@ public class UserService extends UpdatableService<User, UserDto, UpdateUserDto, 
 
     private final IRoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final IndividualCacheService individualCacheService;
 
     public UserService(
             IUserRepository repository,
             UserMapper userMapper,
             IRoleRepository roleRepository,
-            PasswordEncoder passwordEncoder,
-            IndividualCacheService individualCacheService) {
+            PasswordEncoder passwordEncoder) {
         super(repository, userMapper);
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.individualCacheService = individualCacheService;
     }
 
 
@@ -88,16 +84,6 @@ public class UserService extends UpdatableService<User, UserDto, UpdateUserDto, 
             key = "T(com.example.appevemsauth.Config.RedisCacheConfig).userKey(#id)")
     public UserDto getById(Long id) {
         return super.getById(id);
-    }
-
-    @Override
-    public PageResult<UserDto> getByFilter(UserFilter filter) {
-        PageResult<UserDto> result = super.getByFilter(filter);
-        individualCacheService.putIfAbsent(
-                RedisCacheConfig.USER_SECTION,
-                result.items(),
-                user -> RedisCacheConfig.userKey(user.getId()));
-        return result;
     }
 
     @Override

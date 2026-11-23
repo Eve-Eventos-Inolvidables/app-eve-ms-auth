@@ -5,7 +5,6 @@ import com.example.appevecommon.Repository.IBaseRepository;
 import com.example.appevecommon.Service.UpdatableService;
 import com.example.appevecommon.Service.Utilities.Responses.Ok.PageResult;
 import com.example.appevemsauth.Config.RedisCacheConfig;
-import com.example.appevemsauth.Service.Cache.IndividualCacheService;
 import org.openapitools.model.CreateRoleDto;
 import org.openapitools.model.RoleDto;
 import org.openapitools.model.UpdateRoleDto;
@@ -30,12 +29,8 @@ public class RoleService extends UpdatableService<
         RoleFilter> {
 
 
-    private final IndividualCacheService individualCacheService;
-    private final String x = "#{ '${cache.sections.roles}' }";
-    protected RoleService(IBaseRepository<Role> repository, RoleMapper mapper,
-                          IndividualCacheService individualCacheService) {
+    protected RoleService(IBaseRepository<Role> repository, RoleMapper mapper) {
         super(repository, mapper);
-        this.individualCacheService = individualCacheService;
     }
 
     @Caching(
@@ -56,22 +51,7 @@ public class RoleService extends UpdatableService<
     @Cacheable(value = RedisCacheConfig.ROLE_SECTION,
             key = "T(com.example.appevemsauth.Config.RedisCacheConfig).rolesListKey()")
     public List<RoleDto> getAll(){
-        List<RoleDto> roles = new ArrayList<>(repository.findAll().stream().map(mapper::toDto).toList());
-        individualCacheService.putIfAbsent(
-                RedisCacheConfig.ROLE_SECTION,
-                roles,
-                role -> RedisCacheConfig.roleKey(role.getId()));
-        return roles;
-    }
-
-    @Override
-    public PageResult<RoleDto> getByFilter(RoleFilter filter) {
-        PageResult<RoleDto> result = super.getByFilter(filter);
-        individualCacheService.putIfAbsent(
-                RedisCacheConfig.ROLE_SECTION,
-                result.items(),
-                role -> RedisCacheConfig.roleKey(role.getId()));
-        return result;
+        return new ArrayList<>(repository.findAll().stream().map(mapper::toDto).toList());
     }
 
     //CACHE
