@@ -33,4 +33,5 @@ public class UserController extends BaseController<User, UserDto, UserFilter, Us
         log.info("Se actualiza el usuario con id {}",id);
         return ResponseFactory.ok("Usuario Actualizado Correctamente",service.update(id,dto));
     }
+
 }
