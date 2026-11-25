@@ -3,7 +3,6 @@ package com.example.appevemsauth.Service.Role;
 import com.example.appevecommon.Models.User.Role;
 import com.example.appevecommon.Repository.IBaseRepository;
 import com.example.appevecommon.Service.UpdatableService;
-import com.example.appevecommon.Service.Utilities.Responses.Ok.PageResult;
 import com.example.appevemsauth.Config.RedisCacheConfig;
 import org.openapitools.model.CreateRoleDto;
 import org.openapitools.model.RoleDto;
